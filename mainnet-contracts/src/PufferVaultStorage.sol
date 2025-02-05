@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.8.0 <0.9.0;
 
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import { EnumerableMap } from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
 /**
  * @title PufferVaultStorage
@@ -35,6 +35,11 @@ abstract contract PufferVaultStorage {
         // ETH rewards amount
         uint256 totalRewardDepositAmount;
         uint256 totalRewardMintAmount;
+        //  Grants Fields (V3)
+        uint256 maxGrantAmount;
+        address grantManager;
+        mapping(address => bool) approvedGrantRecipients;
+        mapping(address => bool) prefersWETH;
     }
 
     // keccak256(abi.encode(uint256(keccak256("puffervault.depositTracker")) - 1)) & ~bytes32(uint256(0xff))
@@ -45,7 +50,11 @@ abstract contract PufferVaultStorage {
     bytes32 private constant _VAULT_STORAGE_LOCATION =
         0x611ea165ca9257827fc43d2954fdae7d825e82c825d9037db9337fa1bfa93100;
 
-    function _getPufferVaultStorage() internal pure returns (VaultStorage storage $) {
+    function _getPufferVaultStorage()
+        internal
+        pure
+        returns (VaultStorage storage $)
+    {
         // solhint-disable-next-line no-inline-assembly
         assembly {
             $.slot := _VAULT_STORAGE_LOCATION

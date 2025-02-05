@@ -39,3 +39,7 @@ uint64 constant ROLE_ID_LOCKBOX = 7;
 
 // Bridge role for L2RewardManager
 uint64 constant ROLE_ID_BRIDGE = 8;
+
+// Set Role Grant Manager
+
+uint64 constant ROLE_ID_GRANT_MANAGER = 9999;

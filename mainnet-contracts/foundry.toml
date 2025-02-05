@@ -42,7 +42,7 @@ bracket_spacing = true
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 
 [rpc_endpoints]
-mainnet="${ETH_RPC_URL}"
+mainnet="https://mainnet.infura.io/v3/0d67d75193ca45df8fa3bc70c90481be"
 holesky="${HOLESKY_RPC_URL}"
 sepolia="${SEPOLIA_RPC_URL}"
 opsepolia ="${OP_SEPOLIA_RPC_URL}"
