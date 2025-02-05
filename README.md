@@ -76,3 +76,68 @@ For more detailed information on the contract deployments (Mainnet, Holesky, etc
 1. Clone this repository
 2. `yarn install`
 3. `cd mainnet-contracts/ && yarn test:unit` or `cd l2-contracts/ yarn test:unit`
+
+
+# GRANT 
+
+## Overview
+
+This repository contains code to upgrade an existing Puffer Vault to a new version (PufferVaultV3_Grant), introducing a grant payment system:
+
+1. Grant Manager can set a maximum grant amount and approve addresses for grants.
+2. Approved Recipients can set their preference to receive grants in ETH or WETH.
+3. payGrant allows paying out ETH/WETH accordingly.
+We also provide scripts for configuring roles/AccessManager and deploying/upgrading the vault, as well as tests (including fuzz tests) to validate the new logic on a mainnet fork or local environment.
+
+## File Layout & Purpose
+1 . `PufferVaultStorage.sol`
+
+* The storage struct used by the vault.
+* We appended a `mapping(address => bool) prefersWETH`; at the end of the struct to preserve upgrade storage layout.
+
+2. `Roles.sol`
+
+* Contains role constants like ROLE_ID_GRANT_MANAGER.
+* We use these to restrict grant functions in the AccessManager.
+ 
+
+3. Contracts
+   1. PufferVaultV3_Grant.sol
+        * Extends from PufferVaultV3 to add a grant payment system.
+        * Key functions:
+          *  setMaxGrantAmount(...)
+          * approveGrantRecipient(...)
+          *  setGrantPaymentPreference(...)
+          *  payGrant(...)
+  
+* Uses custom errors for better clarity (NotApprovedRecipient, AmountExceedsMaxGrant, etc.).
+* Recipients can store their preference for ETH or WETH; managers call payGrant which respects that preference.
+
+## Scripts 
+
+1. GenerateAccessManagerCalldata4.s.sol
+
+* A Foundry script generating the multicall data to set up the `ROLE_ID_GRANT_MANAGER` for the `PufferVaultV3_Grant` contract in the AccessManager.
+
+* You can queue and execute this data in a timelock or call AccessManager.execute(...) if you have direct admin.
+
+* Key steps in that script:
+    * `setTargetFunctionRole(pufferVaultProxy, [setMaxGrantAmount, approveGrantRecipient, payGrant], ROLE_ID_GRANT_MANAGER)`
+    * `grantRole(ROLE_ID_GRANT_MANAGER, newGrantManager, 0)`
+    * `DeployPufferVaultV3_Grant.s.sol`
+
+* A Foundry script that deploys the new PufferVaultV3_Grant implementation and calls _consoleLogOrUpgradeUUPS to either log the upgrade call data or perform the upgrade on a specific network.
+
+```javascript
+  forge script ./script/DeployPufferVaultV3_Grant.s.sol:DeployPufferVaultV3_Grant --rpc-url $RPC_URL --broadcast
+```
+
+## Tests
+
+1. PufferVaultV3Grant.t.sol
+
+* A Foundry test that upgrades the existing PufferVault proxy to PufferVaultV3_Grant.
+    * Demonstrates:
+        * Setting roles in AccessManager (grant manager function selectors).
+        * Approving addresses for grants, calling payGrant.
+        * Basic fuzz tests (e.g., random amounts to check revert if exceeding maxGrantAmount).
